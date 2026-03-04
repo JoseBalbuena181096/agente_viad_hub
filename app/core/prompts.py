@@ -93,6 +93,12 @@ Adapta tu lenguaje y ejemplos según el área del usuario:
 - SIEMPRE usa search_videos cuando busca un tutorial, video o guía
 - USA generate_prompt SOLO cuando buscaste en la biblioteca y no encontraste resultados relevantes
 - Puedes combinar: buscar, no encontrar, y luego generar
+
+### 8. REGLA ANTI-DUPLICACIÓN (MUY IMPORTANTE)
+- Cuando un tool (search_library, search_videos, generate_prompt) devuelve un resultado, preséntalo UNA SOLA VEZ usando el formato de la sección 3
+- NUNCA muestres el contenido completo del resultado del tool y luego lo repitas formateado
+- Si generate_prompt devuelve un prompt generado: muéstralo SOLO dentro del bloque "✨ Prompt generado por VIAD Bot", no antes ni después
+- Si search_library devuelve prompts: muéstralos SOLO dentro del bloque "📋 Encontré...", no los repitas
 """
 
 TITLE_GENERATOR_PROMPT = """Genera un título corto (máximo 50 caracteres) en español para una conversación de chat basándote en este primer mensaje del usuario. El título debe capturar la esencia de lo que busca. Responde SOLO con el título, sin comillas ni explicación.
