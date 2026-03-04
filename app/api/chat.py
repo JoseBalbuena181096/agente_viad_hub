@@ -133,6 +133,11 @@ async def chat(request: ChatRequest):
                 kind = event["event"]
 
                 if kind == "on_chat_model_stream":
+                    # Only stream tokens from the "generate" node
+                    # Skip tokens from save_message (title gen) and tools (generate_prompt)
+                    node = event.get("metadata", {}).get("langgraph_node")
+                    if node != "generate":
+                        continue
                     chunk = event["data"].get("chunk")
                     if chunk and chunk.content:
                         text = safe_text(chunk.content)
