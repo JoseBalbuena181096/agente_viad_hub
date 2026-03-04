@@ -3,6 +3,7 @@ import io
 from typing import Dict, Any
 from langchain_core.messages import HumanMessage
 from app.services.supabase import get_supabase
+from app.services.llm import safe_text
 
 
 async def setup(state: Dict[str, Any]) -> Dict[str, Any]:
@@ -40,9 +41,10 @@ async def setup(state: Dict[str, Any]) -> Dict[str, Any]:
     if file_context:
         # Append file context to the last human message
         last_msg = messages[-1]
-        if isinstance(last_msg, HumanMessage) and isinstance(last_msg.content, str):
+        if isinstance(last_msg, HumanMessage):
+            text_content = safe_text(last_msg.content)
             enhanced_content = (
-                f"{last_msg.content}\n\n"
+                f"{text_content}\n\n"
                 f"[Contenido del archivo adjunto]:\n{file_context}"
             )
             messages[-1] = HumanMessage(content=enhanced_content)

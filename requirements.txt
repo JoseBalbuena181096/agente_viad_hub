@@ -5,7 +5,7 @@ python-dotenv==1.0.1
 pydantic==2.10.4
 pydantic-settings==2.7.1
 
-# LangChain + LangGraph
+# LangChain + LangGraph (versions compatible with Gemini 3 Flash Preview)
 langchain==0.3.14
 langchain-core==0.3.30
 langchain-google-genai==2.0.8

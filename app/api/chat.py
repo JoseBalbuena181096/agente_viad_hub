@@ -8,6 +8,7 @@ from app.schemas.chat import ChatRequest
 from app.graph.checkpointer import get_checkpointer
 from app.graph.builder import build_graph
 from app.services.supabase import get_supabase
+from app.services.llm import safe_text
 
 router = APIRouter(tags=["chat"])
 
@@ -121,10 +122,13 @@ async def chat(request: ChatRequest):
                 if kind == "on_chat_model_stream":
                     chunk = event["data"].get("chunk")
                     if chunk and chunk.content:
-                        yield {
-                            "event": "token",
-                            "data": json.dumps({"content": chunk.content}),
-                        }
+                        # Gemini 3 preview may return content as list of blocks
+                        text = safe_text(chunk.content)
+                        if text:
+                            yield {
+                                "event": "token",
+                                "data": json.dumps({"content": text}),
+                            }
 
                 elif kind == "on_tool_start":
                     yield {

@@ -1,7 +1,7 @@
 from typing import Dict, Any
 from langchain_core.messages import AIMessage, HumanMessage
 from app.services.supabase import get_supabase
-from app.services.llm import get_llm
+from app.services.llm import get_llm, safe_text
 from app.core.prompts import TITLE_GENERATOR_PROMPT
 
 
@@ -25,7 +25,8 @@ async def save_message(state: Dict[str, Any]) -> Dict[str, Any]:
     for msg in reversed(messages):
         if isinstance(msg, AIMessage) and last_ai is None:
             # Skip tool call messages (they have tool_calls but no text content)
-            if msg.content and not msg.tool_calls:
+            text = safe_text(msg.content)
+            if text and not msg.tool_calls:
                 last_ai = msg
         elif isinstance(msg, HumanMessage) and last_user is None:
             last_user = msg
@@ -36,40 +37,27 @@ async def save_message(state: Dict[str, Any]) -> Dict[str, Any]:
     # Save messages
     try:
         if last_user:
-            content = last_user.content
-            if isinstance(content, list):
-                # Extract text from multimodal content
-                content = next(
-                    (item.get("text", "") for item in content if isinstance(item, dict) and item.get("type") == "text"),
-                    str(content)
-                )
             supabase.table("messages").insert({
                 "conversation_id": conversation_id,
                 "role": "user",
-                "content": content,
+                "content": safe_text(last_user.content),
             }).execute()
 
         if last_ai:
             supabase.table("messages").insert({
                 "conversation_id": conversation_id,
                 "role": "assistant",
-                "content": last_ai.content,
+                "content": safe_text(last_ai.content),
             }).execute()
 
         # Auto-generate title on first message
         if state.get("is_first_message") and last_user:
             try:
-                user_text = last_user.content
-                if isinstance(user_text, list):
-                    user_text = next(
-                        (item.get("text", "") for item in user_text if isinstance(item, dict) and item.get("type") == "text"),
-                        ""
-                    )
-
+                user_text = safe_text(last_user.content)
                 llm = get_llm()
                 prompt = TITLE_GENERATOR_PROMPT.format(message=user_text[:200])
                 title_response = await llm.ainvoke(prompt)
-                title = title_response.content.strip()[:50]
+                title = safe_text(title_response.content).strip()[:50]
 
                 supabase.table("conversations").update({
                     "title": title,
