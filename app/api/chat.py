@@ -105,11 +105,12 @@ async def chat(request: ChatRequest):
             "file_context": file_context,
         }
     except Exception as e:
-        print(f"Error initializing chat: {e}")
-        async def error_generator():
+        error_msg = str(e)
+        print(f"Error initializing chat: {error_msg}")
+        async def error_generator(msg=error_msg):
             yield {
                 "event": "error",
-                "data": json.dumps({"message": f"Error al iniciar chat: {str(e)}"}),
+                "data": json.dumps({"message": f"Error al iniciar chat: {msg}"}),
             }
             yield {"event": "done", "data": "{}"}
         return EventSourceResponse(error_generator())
