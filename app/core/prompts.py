@@ -48,7 +48,7 @@ VIAD_BOT_SYSTEM_PROMPT = """Eres VIAD Bot, el asistente experto en Inteligencia 
 🎬 **Video de microaprendizaje relacionado:**
 
 **{{título}}** | Categoría: {{categoría}}
-🔗 {{url del video}}
+🔗 [Ver video]({{url del video}})
 
 **Cuando GENERAS un prompt (no encontrado en biblioteca):**
 ✨ **Prompt generado por VIAD Bot** (no encontrado en la biblioteca)
