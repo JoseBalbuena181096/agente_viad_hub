@@ -43,7 +43,7 @@ async def get_messages(conversation_id: str):
     response = supabase.table("messages").select(
         "id, role, content, created_at"
     ).eq("conversation_id", conversation_id).order(
-        "created_at", desc=True
+        "created_at", desc=False
     ).execute()
 
     return response.data or []
