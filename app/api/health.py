@@ -8,5 +8,5 @@ async def health():
     return {
         "status": "ok",
         "agent": "VIAD Bot",
-        "model": "gemini-2.5-flash-preview-04-17",
+        "model": "gemini-3-flash-preview",
     }
