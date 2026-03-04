@@ -117,12 +117,14 @@ async def chat(request: ChatRequest):
 
     async def event_generator():
         # Send conversation_id immediately (useful when auto-created)
+        print(f"[STREAM] Starting for conversation {conversation_id}")
         yield {
             "event": "metadata",
             "data": json.dumps({"conversation_id": conversation_id}),
         }
 
         try:
+            token_count = 0
             async for event in graph.astream_events(
                 input_state,
                 config=config,
@@ -133,15 +135,16 @@ async def chat(request: ChatRequest):
                 if kind == "on_chat_model_stream":
                     chunk = event["data"].get("chunk")
                     if chunk and chunk.content:
-                        # Gemini 3 preview may return content as list of blocks
                         text = safe_text(chunk.content)
                         if text:
+                            token_count += 1
                             yield {
                                 "event": "token",
                                 "data": json.dumps({"content": text}),
                             }
 
                 elif kind == "on_tool_start":
+                    print(f"[STREAM] Tool call: {event.get('name', '')}")
                     yield {
                         "event": "tool_call",
                         "data": json.dumps({
@@ -152,6 +155,7 @@ async def chat(request: ChatRequest):
 
                 elif kind == "on_tool_end":
                     output = event.get("data", {}).get("output", "")
+                    print(f"[STREAM] Tool result: {event.get('name', '')}")
                     yield {
                         "event": "tool_result",
                         "data": json.dumps({
@@ -160,7 +164,10 @@ async def chat(request: ChatRequest):
                         }),
                     }
 
+            print(f"[STREAM] Completed. Tokens sent: {token_count}")
+
         except Exception as e:
+            print(f"[STREAM] Error: {e}")
             yield {
                 "event": "error",
                 "data": json.dumps({"message": str(e)}),
