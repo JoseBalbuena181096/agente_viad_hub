@@ -26,6 +26,11 @@ def _resolve_ipv4(hostname: str) -> str | None:
     return None
 
 
+def _quote(value: str) -> str:
+    """Single-quote a value for libpq conninfo, escaping internal quotes."""
+    return "'" + value.replace("\\", "\\\\").replace("'", "\\'") + "'"
+
+
 def _build_conninfo(db_url: str) -> str:
     """Build psycopg conninfo forcing IPv4 via DNS-over-HTTPS."""
     parsed = urlparse(db_url)
@@ -35,12 +40,14 @@ def _build_conninfo(db_url: str) -> str:
     user = parsed.username or "postgres"
     password = parsed.password or ""
 
+    print(f"DB connection: user={user}, host={hostname}, port={port}")
+
     ipv4 = _resolve_ipv4(hostname)
     if ipv4:
         print(f"Resolved {hostname} -> {ipv4} (via DoH)")
         return (
-            f"host={hostname} hostaddr={ipv4} port={port} "
-            f"dbname={dbname} user={user} password={password}"
+            f"host={_quote(hostname)} hostaddr={ipv4} port={port} "
+            f"dbname={_quote(dbname)} user={_quote(user)} password={_quote(password)}"
         )
 
     print(f"WARNING: Could not resolve {hostname} to IPv4")
