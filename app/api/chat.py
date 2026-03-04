@@ -68,41 +68,51 @@ def _process_files(files) -> tuple[list, str | None]:
 async def chat(request: ChatRequest):
     """Chat endpoint with SSE streaming."""
 
-    # Ensure conversation exists
-    conversation_id = request.conversation_id
-    supabase = get_supabase()
+    try:
+        # Ensure conversation exists
+        conversation_id = request.conversation_id
+        supabase = get_supabase()
 
-    if not conversation_id:
-        # Create new conversation
-        conv_response = supabase.table("conversations").insert({
+        if not conversation_id:
+            # Create new conversation
+            conv_response = supabase.table("conversations").insert({
+                "user_id": request.user_id,
+                "title": "Nueva conversación",
+            }).execute()
+            conversation_id = conv_response.data[0]["id"]
+
+        # Process file attachments
+        multimodal_parts, file_context = _process_files(request.files)
+
+        # Build the human message
+        if multimodal_parts:
+            # Multimodal message (text + images)
+            content = [{"type": "text", "text": request.query}] + multimodal_parts
+            human_message = HumanMessage(content=content)
+        else:
+            human_message = HumanMessage(content=request.query)
+
+        # Build and run graph
+        checkpointer = await get_checkpointer()
+        graph = build_graph(checkpointer=checkpointer)
+
+        config = {"configurable": {"thread_id": conversation_id}}
+
+        input_state = {
+            "messages": [human_message],
             "user_id": request.user_id,
-            "title": "Nueva conversación",
-        }).execute()
-        conversation_id = conv_response.data[0]["id"]
-
-    # Process file attachments
-    multimodal_parts, file_context = _process_files(request.files)
-
-    # Build the human message
-    if multimodal_parts:
-        # Multimodal message (text + images)
-        content = [{"type": "text", "text": request.query}] + multimodal_parts
-        human_message = HumanMessage(content=content)
-    else:
-        human_message = HumanMessage(content=request.query)
-
-    # Build and run graph
-    checkpointer = await get_checkpointer()
-    graph = build_graph(checkpointer=checkpointer)
-
-    config = {"configurable": {"thread_id": conversation_id}}
-
-    input_state = {
-        "messages": [human_message],
-        "user_id": request.user_id,
-        "conversation_id": conversation_id,
-        "file_context": file_context,
-    }
+            "conversation_id": conversation_id,
+            "file_context": file_context,
+        }
+    except Exception as e:
+        print(f"Error initializing chat: {e}")
+        async def error_generator():
+            yield {
+                "event": "error",
+                "data": json.dumps({"message": f"Error al iniciar chat: {str(e)}"}),
+            }
+            yield {"event": "done", "data": "{}"}
+        return EventSourceResponse(error_generator())
 
     async def event_generator():
         # Send conversation_id immediately (useful when auto-created)

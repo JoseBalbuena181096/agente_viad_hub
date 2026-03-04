@@ -1,3 +1,4 @@
+import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,11 +16,11 @@ from app.api.vectorize import router as vectorize_router
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    print("🚀 VIAD Bot starting...")
+    print("VIAD Bot starting...")
     yield
     # Shutdown
     await close_checkpointer()
-    print("👋 VIAD Bot shutdown complete")
+    print("VIAD Bot shutdown complete")
 
 
 app = FastAPI(
@@ -29,13 +30,19 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS
+# CORS — allow Vercel preview deployments and custom domains
+_default_origins = [
+    "https://ceo-ia-hub-tu7s.vercel.app",
+    "http://localhost:3000",
+]
+_extra = os.getenv("CORS_ORIGINS", "")
+if _extra:
+    _default_origins.extend([o.strip() for o in _extra.split(",") if o.strip()])
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://ceo-ia-hub-tu7s.vercel.app",
-        "http://localhost:3000",
-    ],
+    allow_origins=_default_origins,
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
