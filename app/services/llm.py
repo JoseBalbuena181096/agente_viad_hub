@@ -24,7 +24,7 @@ def get_embeddings() -> GoogleGenerativeAIEmbeddings:
     if _embeddings is None:
         settings = get_settings()
         _embeddings = GoogleGenerativeAIEmbeddings(
-            model="models/text-embedding-004",
+            model="models/gemini-embedding-001",
             google_api_key=settings.GOOGLE_API_KEY,
         )
     return _embeddings
