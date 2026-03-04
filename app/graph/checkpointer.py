@@ -1,6 +1,6 @@
-import socket
 from urllib.parse import urlparse
 
+import httpx
 from psycopg_pool import AsyncConnectionPool
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from app.core.config import get_settings
@@ -9,8 +9,25 @@ _checkpointer: AsyncPostgresSaver | None = None
 _pool: AsyncConnectionPool | None = None
 
 
-def _build_ipv4_conninfo(db_url: str) -> str:
-    """Build a conninfo string forcing IPv4 to avoid IPv6 issues on Railway."""
+def _resolve_ipv4(hostname: str) -> str | None:
+    """Resolve hostname to IPv4 via Cloudflare DNS-over-HTTPS."""
+    try:
+        resp = httpx.get(
+            "https://1.1.1.1/dns-query",
+            params={"name": hostname, "type": "A"},
+            headers={"Accept": "application/dns-json"},
+            timeout=5,
+        )
+        for answer in resp.json().get("Answer", []):
+            if answer.get("type") == 1:  # A record
+                return answer["data"]
+    except Exception as e:
+        print(f"DoH resolution failed: {e}")
+    return None
+
+
+def _build_conninfo(db_url: str) -> str:
+    """Build psycopg conninfo forcing IPv4 via DNS-over-HTTPS."""
     parsed = urlparse(db_url)
     hostname = parsed.hostname or ""
     port = parsed.port or 5432
@@ -18,19 +35,16 @@ def _build_ipv4_conninfo(db_url: str) -> str:
     user = parsed.username or "postgres"
     password = parsed.password or ""
 
-    # Resolve hostname to IPv4
-    try:
-        ipv4 = socket.getaddrinfo(hostname, None, socket.AF_INET)[0][4][0]
-        print(f"Resolved {hostname} -> {ipv4}")
-    except (socket.gaierror, IndexError):
-        print(f"Could not resolve {hostname} to IPv4, using hostname directly")
-        return db_url
+    ipv4 = _resolve_ipv4(hostname)
+    if ipv4:
+        print(f"Resolved {hostname} -> {ipv4} (via DoH)")
+        return (
+            f"host={hostname} hostaddr={ipv4} port={port} "
+            f"dbname={dbname} user={user} password={password}"
+        )
 
-    # Use key-value format with hostaddr to force IPv4
-    return (
-        f"host={hostname} hostaddr={ipv4} port={port} "
-        f"dbname={dbname} user={user} password={password}"
-    )
+    print(f"WARNING: Could not resolve {hostname} to IPv4")
+    return db_url
 
 
 async def get_checkpointer() -> AsyncPostgresSaver:
@@ -42,7 +56,7 @@ async def get_checkpointer() -> AsyncPostgresSaver:
 
     if _checkpointer is None:
         settings = get_settings()
-        conninfo = _build_ipv4_conninfo(settings.SUPABASE_DB_URL)
+        conninfo = _build_conninfo(settings.SUPABASE_DB_URL)
         _pool = AsyncConnectionPool(
             conninfo=conninfo,
             min_size=1,
