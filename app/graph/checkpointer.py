@@ -15,17 +15,20 @@ async def get_checkpointer() -> AsyncPostgresSaver:
 
     if _checkpointer is None:
         settings = get_settings()
+        db_url = settings.SUPABASE_DB_URL
         print(f"Connecting to DB pooler...")
         _pool = AsyncConnectionPool(
-            conninfo=settings.SUPABASE_DB_URL,
-            min_size=1,
-            max_size=5,
+            conninfo=db_url,
+            min_size=0,
+            max_size=3,
             open=False,
+            timeout=10,
         )
-        await _pool.open()
+        await _pool.open(wait=True, timeout=15)
         print("DB pool connected successfully")
         _checkpointer = AsyncPostgresSaver(_pool)
         await _checkpointer.setup()
+        print("Checkpointer setup complete")
 
     return _checkpointer
 
