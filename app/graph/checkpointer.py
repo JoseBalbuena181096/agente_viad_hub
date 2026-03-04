@@ -1,40 +1,23 @@
-from psycopg_pool import AsyncConnectionPool
-from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
-from app.core.config import get_settings
+from langgraph.checkpoint.memory import MemorySaver
 
-_checkpointer: AsyncPostgresSaver | None = None
-_pool: AsyncConnectionPool | None = None
+_checkpointer: MemorySaver | None = None
 
 
-async def get_checkpointer() -> AsyncPostgresSaver:
+async def get_checkpointer() -> MemorySaver:
     """
-    Get or create the PostgresSaver checkpointer.
-    Uses Supabase Session Pooler (IPv4 compatible).
+    Get or create the checkpointer.
+    Uses in-memory storage. Conversation messages are persisted
+    to Supabase via REST API in the save_message node.
     """
-    global _checkpointer, _pool
+    global _checkpointer
 
     if _checkpointer is None:
-        settings = get_settings()
-        db_url = settings.SUPABASE_DB_URL
-        print(f"Connecting to DB pooler...")
-        _pool = AsyncConnectionPool(
-            conninfo=db_url,
-            min_size=0,
-            max_size=3,
-            open=False,
-            timeout=10,
-        )
-        await _pool.open(wait=True, timeout=15)
-        print("DB pool connected successfully")
-        _checkpointer = AsyncPostgresSaver(_pool)
-        await _checkpointer.setup()
-        print("Checkpointer setup complete")
+        _checkpointer = MemorySaver()
+        print("MemorySaver checkpointer initialized")
 
     return _checkpointer
 
 
 async def close_checkpointer():
-    """Close the connection pool on shutdown."""
-    global _pool
-    if _pool:
-        await _pool.close()
+    """No-op for MemorySaver."""
+    pass
