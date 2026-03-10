@@ -171,28 +171,28 @@ Tipografías:
 ```mermaid
 graph LR
     subgraph "Rutas Públicas"
-        LOGIN[/login<br/>Inicio de sesión]
-        AUTH_CB[/auth/callback<br/>OAuth callback]
-        AUTH_RESET[/auth/reset-password]
-        AUTH_SIGNOUT[/auth/signout]
-        AUTH_UPDATE[/auth/update-password]
+        LOGIN["/login<br/>Inicio de sesión"]
+        AUTH_CB["/auth/callback<br/>OAuth callback"]
+        AUTH_RESET["/auth/reset-password"]
+        AUTH_SIGNOUT["/auth/signout"]
+        AUTH_UPDATE["/auth/update-password"]
     end
 
     subgraph "Rutas Protegidas (Usuario)"
-        HOME[/ <br/>Página principal]
-        LIBRARY[/library<br/>Biblioteca de Prompts]
-        LEARNING[/learning<br/>Videos de Aprendizaje]
-        SEARCH[/search<br/>Búsqueda Global]
-        PROFILE[/profile<br/>Perfil de Usuario]
-        CHAT[Chat Widget<br/>VIAD Bot]
+        HOME["/<br/>Página principal"]
+        LIBRARY["/library<br/>Biblioteca de Prompts"]
+        LEARNING["/learning<br/>Videos de Aprendizaje"]
+        SEARCH["/search<br/>Búsqueda Global"]
+        PROFILE["/profile<br/>Perfil de Usuario"]
+        CHAT["Chat Widget<br/>VIAD Bot"]
     end
 
     subgraph "Rutas Admin"
-        ADMIN[/admin<br/>Dashboard]
-        ADMIN_P[/admin/prompts<br/>Gestión Prompts]
-        ADMIN_V[/admin/videos<br/>Gestión Videos]
-        ADMIN_C[/admin/categories<br/>Categorías]
-        ADMIN_U[/admin/users<br/>Usuarios]
+        ADMIN["/admin<br/>Dashboard"]
+        ADMIN_P["/admin/prompts<br/>Gestión Prompts"]
+        ADMIN_V["/admin/videos<br/>Gestión Videos"]
+        ADMIN_C["/admin/categories<br/>Categorías"]
+        ADMIN_U["/admin/users<br/>Usuarios"]
     end
 
     LOGIN -->|Autenticado| HOME
@@ -1012,8 +1012,8 @@ graph TB
     end
 
     subgraph "IA / ML"
-        GEMINI3[Gemini 3 Flash<br/>Preview]
-        GEMINI_EMB[Gemini Embedding<br/>001 (3072d)]
+        GEMINI3["Gemini 3 Flash<br/>Preview"]
+        GEMINI_EMB["Gemini Embedding<br/>001 (3072d)"]
     end
 
     subgraph "Base de Datos"
