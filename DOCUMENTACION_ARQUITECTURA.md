@@ -43,12 +43,12 @@
 
 ### Componentes Principales
 
-| Componente | Tecnología | Despliegue | URL Producción |
-|---|---|---|---|
-| Frontend | Next.js 16 + React 19 | Vercel | https://ceo-ia-hub-tu7s.vercel.app |
-| Backend (Agente IA) | FastAPI + LangGraph | Railway | https://web-production-ccc6a.up.railway.app |
-| Base de Datos | PostgreSQL + pgvector | Supabase | (Proyecto Supabase) |
-| Autenticación | Supabase Auth | Supabase | (Integrado) |
+| Componente | Tecnología | Despliegue | URL Producción | Repositorio |
+|---|---|---|---|---|
+| Frontend | Next.js 16 + React 19 | Vercel | https://ceo-ia-hub-tu7s.vercel.app | [ceo_ia_hub](https://github.com/JoseBalbuena181096/ceo_ia_hub.git) |
+| Backend (Agente IA) | FastAPI + LangGraph | Railway | https://web-production-ccc6a.up.railway.app | [agente_viad_hub](https://github.com/JoseBalbuena181096/agente_viad_hub) |
+| Base de Datos | PostgreSQL + pgvector | Supabase | (Proyecto Supabase) | N/A |
+| Autenticación | Supabase Auth | Supabase | (Integrado) | N/A |
 
 ---
 
